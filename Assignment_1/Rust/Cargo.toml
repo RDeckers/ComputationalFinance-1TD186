@@ -5,3 +5,4 @@ authors = ["R. Deckers <admin@codingcat.nl>"]
 
 [dependencies]
 rand = "*"
+time = "*"
