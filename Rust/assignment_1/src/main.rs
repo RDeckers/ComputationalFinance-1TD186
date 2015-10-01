@@ -47,6 +47,17 @@ pub fn bootstrap<T : Default + Add<T, Output = T> + Copy + Div<f64, Output = f64
   boots
 }
 
+fn step_stock_euler(stock : f64, volatility : f64, gamma : f64, interest: f64, delta_t : f64, delta_w : f64) -> f64{
+  let volatility_term = {
+    if stock < 0.0 {//this is how Matlab handles fractional exponentiation with negative bases.
+      -delta_w*volatility*(stock.abs().powf(gamma))
+      } else {
+        delta_w*volatility*(stock.powf(gamma))
+      }
+    };
+    stock*(1.0+interest*delta_t)+volatility_term
+}
+
 pub fn simulate_option(
   initial_stock : f64,
   strikeout :f64,
@@ -54,52 +65,44 @@ pub fn simulate_option(
   volatility : f64,
   gamma: f64,
   end_time : f64,
-  delta_t : f64
-  ) -> f64{
-    let mut stock = initial_stock;
-    let mut stock_2 = initial_stock;
-    let mut t = 0.0;
+  delta_t : f64,
+  n_runs: usize
+  ) -> Vec<f64>{
+    let mut runs = Vec::<f64>::with_capacity(n_runs);
     let mut rng = rand::thread_rng();
-    let normal = Normal::new(0.0, delta_t.sqrt());
-    while t < end_time {
-      let delta_w = normal.ind_sample(&mut rng);
-      //let StandardNormal(delta_w) = rng.gen();
-      //println!("{}", delta_w);
-      /*if stock < 0.0 {
-        return 0.0; //discard when <0.0 because volatility_term becomes NaN.
-      }
-      let volatility_term = delta_w*volatility*(stock.powf(gamma));*/
-      let volatility_term = {
-        if stock < 0.0 {//this is how Matlab handles fractional exponentiation with negative bases.
-          -delta_w*volatility*(stock.abs().powf(gamma))
-          } else {
-            delta_w*volatility*(stock.powf(gamma))
-          }
-        };
-        stock = stock*(1.0+interest*delta_t)+volatility_term;
-        stock_2 = stock*(1.0+interest*delta_t)-volatility_term;
-        //println!("{}", stock);
+    let normal = Normal::new(0.0, 1.0);
+    for _ in 0..n_runs{
+      let mut t = 0.0;
+      let mut stock = initial_stock;
+      let mut stock_2 = initial_stock;
+      let mut correlation = 0.0;
+      while t < end_time {
+        let delta_w = normal.ind_sample(&mut rng)*delta_t.sqrt();
+        let delta_w_2 = normal.ind_sample(&mut rng)*delta_t.sqrt(); //idd just as good as negative?!
+        correlation += delta_w_2*delta_w;
+        //println!("{}", delta_w/delta_w_2);
+        stock = step_stock_euler(stock, volatility, gamma, interest, delta_t, delta_w);
+        stock_2 = step_stock_euler(stock_2, volatility, gamma, interest, delta_t, delta_w_2); //no better then taking a new idd delta_w?
         t = t + delta_t;
       }
+      println!("{}", correlation);
       let mut profit_1 = (stock-strikeout)*((-interest*end_time).exp());
       if profit_1.is_sign_negative(){
         profit_1 = 0.0;
       }
-      let mut profit_2 = (stock_2-strikeout)*((-interest*end_time).exp()); //cap these at 0 _before_ blending
+      let mut profit_2 = (stock_2-strikeout)*((-interest*end_time).exp());
       if profit_2.is_sign_negative(){
         profit_2 = 0.0;
       }
-      0.5*profit_1+0.5*profit_2
+      runs.push(0.5*profit_1+0.5*profit_2); //Antithetic variates, see http://www.columbia.edu/~ks20/4703-Sigman/4703-07-Notes-ATV.pdf , section 1.4
     }
+    runs
+  }
 
-    fn main() {
-      let total_runs = 10_000;
-      let mut runs = Vec::<f64>::with_capacity(total_runs);
-      for _ in 0..total_runs{
-        let option = simulate_option(12.0, 15.0, 0.1, 0.25, 0.8, 0.5, 1.0/256.0);
-        runs.push(option);
-      }
-      let boots = bootstrap(&runs, 5000);
-      println!("Normal mean: {} +- {}", mean(&runs), variance(&runs));
-      println!("Bootstrapped mean: {} +- {}", mean(&boots), variance(&boots)*(total_runs as f64));
-    }
+  fn main() {
+    let total_runs = 10_000;
+    let runs = simulate_option(12.0, 15.0, 0.1, 0.25, 1.0, 0.5, 0.0005, total_runs);
+    println!("Normal mean: {} +- {}", mean(&runs), variance(&runs));
+    let boots = bootstrap(&runs, 500);
+    println!("Bootstrapped mean: {} +- {}", mean(&boots), variance(&boots)*(total_runs as f64));
+  }
