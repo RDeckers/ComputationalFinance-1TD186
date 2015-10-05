@@ -21,6 +21,21 @@ pub fn variance<T : Default + Add<T, Output = T> + Mul<T, Output = T> + Copy + D
   mean_of_sq - mean*mean
 }
 
+pub fn forward_convolve<T : Default + Add<T, Output = T> + Sub<f64, Output = T> + Mul<T, Output = T> + Copy + Div<f64, Output = f64>>
+    (x : &Vec<T>, mask : &Vec<T>) -> Vec<T>{
+        let mut y = Vec::<T>::with_capacity(x.len() - mask.len()+1);
+        if mask.len() != 0{//More rusty way?
+            for i in 0..x.len()-mask.len()+1{
+                let mut collector = T::default();
+                for j in 0..mask.len(){
+                    collector = collector + x[i+j]*mask[j];
+                }
+                y.push(collector);
+            }
+        }
+        y
+}
+
 pub fn covariance<T : Default + Add<T, Output = T> + Sub<f64, Output = T> + Mul<T, Output = T> + Copy + Div<f64, Output = f64>>(x : &Vec<T>, y : &Vec<T>) -> f64{
   let mean_x = mean(x);
   let mean_y = mean(y);
@@ -131,25 +146,47 @@ pub fn simulate_option(
     runs_combined
   }
 
+  fn compute_v_of_s(
+      s_begin : f64,
+      s_end : f64,
+      delta_s : f64,
+      strikeout :f64,
+      interest : f64,
+      volatility : f64,
+      gamma: f64,
+      end_time : f64,
+      delta_t : f64,
+      n_runs: usize)
+      -> Vec<f64>{
+      let n_s : usize = ((s_end-s_begin)/(delta_s)) as usize;
+      println!("{:?}", n_s);
+      let mut v = Vec::<f64>::with_capacity(n_s);
+      let mut current_s = s_begin;
+      for i in 0..n_s{
+          v.push(mean(&simulate_option(current_s, strikeout, interest, volatility, gamma, end_time, delta_t, n_runs)));
+          println!("computed S = {}", current_s );
+          current_s = current_s+delta_s
+      }
+      println!("last S: {}", current_s - delta_s );
+      v
+  }
   fn main() {
     let start = PreciseTime::now();
     let mut total_runs = 100_000;
-    let exact = 0.199889972822117;
-    println!("Exact solution: {}\n\n", exact);
-    //let variance_1 = variance(&runs_1);
-    //let variance_2 = variance(&runs_2);
-    //let covariance = covariance(&runs_1, &runs_2);
-    //println!("Normal mean  1 : {} +- {}", mean(&runs_1), variance_1);
-    //println!("Normal mean  2 : {} +- {}", mean(&runs_2), variance_2);
-    //println!("covariance : {}", covariance);
-    //println!("Expected variance : {}", 0.25*variance_1+0.25*variance_2+0.5*covariance);
-    let mut dt = 0.04;
-    while dt > 0.000099{
-    //while total_runs <= 100_000{
-      let mut runs_combined = simulate_option(12.0, 15.0, 0.1, 0.25, 1.0, 0.5, dt, total_runs);
-      let mean_x = mean(&runs_combined);
-      println!("{},{}", dt, (mean_x-exact).abs());
-      dt *= 0.85
+    //let exact = 0.199889972822117;
+    //println!("Exact solution: {}\n\n", exact);
+    let mut dt = 0.01;
+    let delta_s = 0.25;
+    let v_of_s = compute_v_of_s(7.5,35.0,delta_s, 15.0, 0.1, 0.25, 1.0, 0.5, dt, total_runs);
+    println!("V(S)\n==================\n{:?}\n", v_of_s);
+    let mask = vec![-1.0/delta_s,1.0/delta_s];
+    let delta_of_s = forward_convolve(&v_of_s, &mask);
+    println!("Delta of S\n==================\n{:?}\n", delta_of_s);
+    //while dt > 0.000099{
+    //   let mut runs_combined = simulate_option(12.0, 15.0, 0.1, 0.25, 1.0, 0.5, dt, total_runs);
+    //   let mean_x = mean(&runs_combined);
+    //   println!("{},{}", dt, (mean_x-exact).abs());
+    //   dt *= 0.85
       // let var = variance(&runs_combined);
       // println!("var\t{}", var);
       // for i in 0..runs_combined.len(){
@@ -163,7 +200,7 @@ pub fn simulate_option(
     // }/
     //let boots = bootstrap(&runs, 500);
     //println!("Bootstrapped mean: {} +- {}", mean(&boots), variance(&boots)*(total_runs as f64));
-  }
+  // }
     let end = PreciseTime::now();
     println!("Completed in {}s", start.to(end));
   }
