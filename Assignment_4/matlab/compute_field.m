@@ -14,11 +14,11 @@ F = 3*speye(N)+2*deltaT*A;
 v = transpose(S - K) %value at time t=T (initial condition), discounted to be in t=0 'dollars'.
 v_old = v;
 V = [v];
-for k = 1:M 
+for k = 1:M
         v_new = F\(4*v-v_old);
         v_old = v;
         v = v_new;
-        %v = F\v;    
+        %v = F\v;
         V = [V [v]];
 end
 %colorDepth = 1000;
@@ -27,7 +27,7 @@ values = V(end-N+1:end);
 T = fliplr(0:deltaT:T);
 hold on;
 h= pcolor(T, S, V)
-set(h,'edgecolor','none') 
+set(h,'edgecolor','none')
 [C,hfigc] = contour(T, S, V);
 set(hfigc, ...
     'LineWidth',1.0, ...

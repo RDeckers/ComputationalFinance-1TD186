@@ -1,4 +1,53 @@
 %& -job-name=Assignment4
 \input{./documents-common/preamble.tex}
 \begin{document}
+  \maketitle[Computational Finance]{Pricing of Barrier Options using Finite Differences}
+%TODO: small bit about their use
+  \section{Methodology}
+  In order to calculate the value of a up-and-out European barrier-option we use a finite-difference approximation of the Black-Scholes model.
+  This model is given by:
+  \begin{align}
+    \label{eq:pde}
+    \pdrv[t]V + rS\pdrv[S]V + \frac{1}{2}\sigma^2S^2\pdrv[S^2]{^2V}-rV = 0
+ \end{align}
+ We discretize it in $S$ space using a standard equidistant grid and the standard second-order central finite-difference methods for the derivatives.
+ That is,
+ \begin{align}
+   \pdrv[S]V &= \frac{V(t, S+\Delta S)-V(t, S-\Delta S)}{2\Delta S},\nn
+   \pdrv[S^2]{^2V} &= \frac{V(t,S+\Delta S)-2V(t,S)+V(t,S-\Delta S)}{\Delta S^2}
+ \end{align}
+ We Discretize in time by making the change of variable $t\to \tau, \tau = T-t$ and integrate using the BDF-2 scheme.
+ The BDF-2 scheme is given by
+ \begin{align}
+  &V^+ - \frac{4}{3}V + \frac{1}{3}V^- = \frac{2}{3}\Delta t A V^+\nn
+  \to& \left(3I-2\Delta t A)V^+ = 4V-V^-
+ \end{align}
+ Where $A$ is a tridiagonal matrix constructed using the finite-difference scheme we showed before.
+ \section{Boundary Conditions}
+  The boundary conditions on a up-and-out barrier option are given by
+  \begin{align}
+    V(\text{barrier}) = V(K) = 0.
+  \end{align}
+  This is easy to understand intuitively, as these are the conditions imposed on us by the definition of the barrier and the pay-off function respectively.
+
+  We use the injection method to implement these boundary conditions (i.e. we forcefully set the boundaries to zero after each update).
+
+  \section{The Greeks}
+  The greeks can be computed by taking the finite-difference derivatives with respect to dependant variables.
+  The greeks we will look at are given by
+  \begin{align}
+    \Delta = \pdrv[S]V,\nn
+    \Gamma = \pdrv[S^2]{^2 V},\nn
+    \nu = \pdrv[\sigma]{V}.
+  \end{align}
+  They can be computed using the standard finite difference approximations we showed before. We will compare these to the results we previously obtained for standard European options.
+  \subsection{$\Delta$}
+  \subsection{$\Gamma$}
+  \subsection{$\nu$}
+  Vega\footnote{nu!} is a measure of how the value of an option changes with the implied volatility of the underlying asset. We have computed the value $V$ at time $t=0$ for various
+  values of sigma, as shown here.
+  %TODO: Insert picture
+  If one takes the derivative along the $\sigma$-axis one gets a plot of $\nu$ as a function of $sigma$ and $S$.
+  %TODO: Ask what would be better, vega as a function of T or vega as a function of S? both?
+
 \end{document}
