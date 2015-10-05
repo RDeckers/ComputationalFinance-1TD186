@@ -1,4 +1,4 @@
-function [] = compute_field( N,M )
+function [V] = compute_field( N,M )
 K=15; %strike price
 B = 2*K;
 T=0.5; %time of maturity

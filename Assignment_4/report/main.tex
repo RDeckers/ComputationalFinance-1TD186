@@ -3,6 +3,13 @@
 \begin{document}
   \maketitle[Computational Finance]{Pricing of Barrier Options using Finite Differences}
 %TODO: small bit about their use
+\section{Barrier Options}
+Barrier options are options which either come into play or drop-out if the $S$ hits
+a predefined value.
+We have investigated and will discuss {\em up-and-out call options}, which are options which expire
+worthless when the underlying assets hits a predefined top-barrier. These types of options can be used to
+hedge ones risks when taking a short position, and of course speculatatively.
+\par We will show how to model this type of option using a discrete PDE and compare it to a vanilla option.
   \section{Methodology}
   In order to calculate the value of a up-and-out European barrier-option we use a finite-difference approximation of the Black-Scholes model.
   This model is given by:
@@ -23,10 +30,13 @@
   \to& \left(3I-2\Delta t A)V^+ = 4V-V^-
  \end{align}
  Where $A$ is a tridiagonal matrix constructed using the finite-difference scheme we showed before.
+\section{Initial Conditions}
+ For the initial condition we use $(V-K)^+$ just as we did before.
+
  \section{Boundary Conditions}
   The boundary conditions on a up-and-out barrier option are given by
   \begin{align}
-    V(\text{barrier}) = V(K) = 0.
+    V(S > \text{barrier}) = V(S < K) = 0.
   \end{align}
   This is easy to understand intuitively, as these are the conditions imposed on us by the definition of the barrier and the pay-off function respectively.
 
@@ -37,17 +47,18 @@
   The greeks we will look at are given by
   \begin{align}
     \Delta = \pdrv[S]V,\nn
-    \Gamma = \pdrv[S^2]{^2 V},\nn
     \nu = \pdrv[\sigma]{V}.
   \end{align}
   They can be computed using the standard finite difference approximations we showed before. We will compare these to the results we previously obtained for standard European options.
   \subsection{$\Delta$}
-  \subsection{$\Gamma$}
+  Delta is a measure of the rate of change in the value $V$ as function of $S$. We can compute it by taking the derivative of our computed solutions w.r.t. to $S$
+  We have plotted it in the following figures
+%TODO: insert pictures
   \subsection{$\nu$}
   Vega\footnote{nu!} is a measure of how the value of an option changes with the implied volatility of the underlying asset. We have computed the value $V$ at time $t=0$ for various
   values of sigma, as shown here.
   %TODO: Insert picture
-  If one takes the derivative along the $\sigma$-axis one gets a plot of $\nu$ as a function of $sigma$ and $S$.
+  If one takes the derivative along the $\sigma$-axis one gets a plot of $\nu$ as a function of $\sigma$ and $S$.
   %TODO: Ask what would be better, vega as a function of T or vega as a function of S? both?
 
 \end{document}
