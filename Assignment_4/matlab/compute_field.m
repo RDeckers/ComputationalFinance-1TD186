@@ -1,10 +1,11 @@
-function [] = compute_field( N,M, gamma )
+function [] = compute_field( N,M )
 K=15; %strike price
 B = 2*K;
 T=0.5; %time of maturity
 deltaT = T/M;
 r=0.1; %rate of interest
 sigma=0.5; %volatility
+gamma = 1.0;
 
 S = generate_S(N, B, K)
 A = generate_A_matrix(N, sigma, r, B,K, gamma)

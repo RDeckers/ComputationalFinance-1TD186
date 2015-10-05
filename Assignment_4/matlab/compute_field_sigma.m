@@ -1,6 +1,6 @@
 function [] = compute_field_sigma( N,M, sigma_min, sigma_max, delta_sigma )
 K=15; %strike price
-B = 15*K;
+B = 2*K;
 T=0.5; %time of maturity
 deltaT = T/M;
 r=0.1; %rate of interest
