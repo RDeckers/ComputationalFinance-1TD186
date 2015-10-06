@@ -15,12 +15,16 @@ function [] = delta_field_sigma( N, M,  sigma_min, sigma_max, delta_sigma)
     size(V)
     values = V(end-N+1:end);
     sigma= sigma_min:delta_sigma:sigma_max;
-    size(S)
     hold on;
     h= pcolor(sigma, S(1:end-1), delta)
     set(h,'edgecolor','none')
     hold off;
     hcb = colorbar('location','EastOutside');
     caxis([-0.2 0.2])
+    n = 140;
+    figure(8)
+    plot(sigma, delta(1,:), sigma, delta(n/2,:), sigma, delta(n,:))
+    figure(9)
+    plot(S(1:end-1), delta(:,1), S(1:end-1), delta(:,n/2), S(1:end-1), delta(:,n))
 end
 

@@ -1,5 +1,6 @@
 function [] = delta_field( N, M )
     V = compute_field(N, M);
+    
     figure(2)
     mask = [-1 0 1]
     K=15; %strike price
@@ -22,5 +23,7 @@ function [] = delta_field( N, M )
     hold off;
     hcb = colorbar('location','EastOutside');
     caxis([-0.1 0.1])
+    figure(8)
+    plot(S(1:end-1), delta(:,1), S(1:end-1), delta(:,250), S(1:end-1), delta(:,500))
 end
 

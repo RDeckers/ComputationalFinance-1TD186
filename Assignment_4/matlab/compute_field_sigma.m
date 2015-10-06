@@ -9,6 +9,8 @@ gamma = 1.0;
 
 S = generate_S(N, B, K);
 V = [];
+figure(7)
+hold on
 for s = sigma
     s;
     A = generate_A_matrix(N, s, r, B,K, gamma);
@@ -23,9 +25,17 @@ for s = sigma
             %v = F\v;    
     end
     V = [V [v]];
-    s
-    v(end/2)
+    if s == sigma_min
+        plot(S,v)
+    end
+    if abs(s-(sigma_min + 0.5*(sigma_max-sigma_min))) < delta_sigma/2
+        plot(S,v)
+    end
+    s;
+    v(end/2);
 end
+plot(S,v)
+figure(1)
 V;
 %colorDepth = 1000;
 %colormap(jet(colorDepth));
