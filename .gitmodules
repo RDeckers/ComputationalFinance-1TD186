@@ -4,3 +4,6 @@
 [submodule "Assignment_4/report/documents-common"]
 	path = Assignment_4/report/documents-common
 	url = git@github.com:RDeckers/documents-common.git
+[submodule "Assignment_5/Documents-Common"]
+	path = Assignment_5/Documents-Common
+	url = https://github.com/RDeckers/Documents-Common

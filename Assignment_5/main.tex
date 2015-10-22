@@ -1,0 +1,54 @@
+%& -job-name=Assignment5
+\input{./Documents-Common/preamble.tex}
+\begin{document}
+  \maketitle[Computational Finance]{Pricing of American Options}
+  In this report we discuss the pricing of American Options
+  \section{Monte Carlo}
+In order to price American options using Monte Carlo one simulates several price paths under a financial model (e.g. Black Scholes) similar to how one does for European options.
+However one has to take into account variable stopping time $\tau$, ($0 \leq \tau \leq T$), the value of an american option at $t=0$ is given by
+\begin{align}
+  \label{eq:mc_raw}
+  V(S, 0) = \sup_{0\leq \tau \leq T} E(e^{-r\tau}\Psi(S_\tau)|S_0 = S)
+\end{align}.
+That is, the supremum w.r.t. time of the expected, discounted, pay-off. (So simply, the regular value at the best time $\tau$).
+We approximate \eqref{eq:mc_raw} by computing a lower- and upper-bound on the supremum.
+that is
+\begin{align}
+  V^\text{low}(S,0) \leq V(S,0) \leq V^\text{up}(S,0)
+\end{align}
+\par In order to compute the lower bound we simply have to decide upon a stopping strategy and simulate it (without looking farther into the future).
+One such strategy would be to define a curve in $(s,t)$ space and exercise as soon as we pass this curve. The simplest curve is of course a fixed value of $S = \beta$.
+while we can pick any strategy we wish, it is best to pick best possible strategy to try and get the spread between $V^\text{low}$ and $V^\text{up}$ as small as possible (and make as much profit as possible using said strategy).
+\par In order to compute an upper bound, we simulate the value of $V$ for all values of $t$ and then pick $\tau$ to be the ideal time to exercise.
+  \section{Finite Differences}
+A finite difference approach to American Options leads to an open boundary equation, where one of the boundaries (left or right, depending on the type of option) is given by
+the early exercise curve. The derivation of this is given in Seydel 4.5 to 4.6.1 (with the back-transform descibed in algorithm 4.14). We will not reproduce the full derivation for brevities sake but do note that we end up with a matrix equation
+similar to what we find for European options only this time with additional restrictions, in the notation of Seydel:
+\begin{align}
+  Aw-b \geq 0,\nn
+  w \geq g,\nn
+  (Aw-b)^T(w-g) = 0.
+\end{align}
+This is a Linear Complementarity Problem (LCP) and like matrix equations, there exist algorithms for solving this system for $w$. One such method is the iterative {\em Projected Succesive Over-Relaxation} (PSOR), and if $A$ is tri-diagonal we can also use the Brennan-Schwarz Algorithm to solve it directly, similar to how we could do so for normal matrix equations and tridiagonal matrices.
+\par Knowing this, the general structure of the problem is similar to that of a European option.
+\begin{itemize}
+  \item{Initialize the necessary variables}
+  \item{Loop over each time-step} and solve the LCP-problem for each time-step.
+  \item{Convert back to 'normal' coordinates} using the steps described in algorithm 4.14 and then check for early-exercise by computing $S_i_f$.
+\end{itemize}
+   \section{Operator Splitting}
+   Operator splitting has at its base a finite difference approximation as before. However, instead of solving the LCP for $V^i$  one solves for an intermediate variable
+   $\hat V^i$ and then projecting the solution so that it fits the constraints. For Crank-Nicolson this means that instead of solving the LCP system we perform the steps
+   \begin{align}
+     \frac{1}{\Delta t}\left(v^{k+1}-\hat v^k\right) + A \left((1-\alpha)v^{k+1}+\alpha\hat v^k\right)-\lambda^{k+1} = 0,
+   \end{align}
+   and
+   \begin{align}
+     \frac{1}{\Delta t}\left(\hat v^k-v^k\right)+ \lambda^{k+1}-\lambda^k &= 0,\nn
+     \left[v_i^k-(E-x_i)]\cdot\lambda_i^k &= 0,\nn
+     v_i^k &\geq E - x_i,\nn
+     \lambda_i^k &\geq 0.
+   \end{align}
+   The first equation is a normal system of equations for $\hat v^k$ and the second equation can be quickly solved for $\lambda^k$ and $v^k$.
+   \par This method is much faster than the LCP method as is shown in the paper by Ikonen and Toivanen.
+\end{document}
